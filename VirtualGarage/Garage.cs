@@ -9,7 +9,7 @@ namespace VirtualGarage
 {
     class Garage<T> : IEnumerable<T> where T : Vehicle
     {
-        List<Vehicle> storage;
+        static List<Vehicle> storage;
 
         public Garage(int limit = int.MaxValue)
         {
@@ -29,6 +29,16 @@ namespace VirtualGarage
             yield return storage.GetEnumerator();
         }
 
+        public int Limit()
+        {
+            return storage.Capacity;
+        }
+
+        /// <summary>
+        /// Adds a vehicle to the garage if possible.
+        /// </summary>
+        /// <param name="v">Vehicle</param>
+        /// <returns>True if there was space, False otherwise</returns>
         public bool Add(Vehicle v)
         {
             if (storage.Count == storage.Capacity)
@@ -40,6 +50,11 @@ namespace VirtualGarage
             return true;
         }
 
+        /// <summary>
+        /// Removes a vehicle from the garage if possible.
+        /// </summary>
+        /// <param name="v">Vehicle</param>
+        /// <returns>True if the vehicle existed in the garage, False otherwise</returns>
         public bool Remove(Vehicle v)
         {
             if (!storage.Contains(v))
@@ -51,9 +66,43 @@ namespace VirtualGarage
             return true;
         }
 
+        /// <summary>
+        /// Returns a list of all vehicles of a given type.
+        /// </summary>
+        /// <param name="type">Type (typeof(Car), typeof(Airplane) etc.)</param>
+        /// <returns></returns>
         public List<Vehicle> GetVehiclesByType(Type type)
         {
-            var query = storage.Where(v => v.GetType() == type).Select(v => v);
+            var query = storage.Where(v => v.GetType() == type)
+                        .Select(v => v);
+
+            return query.ToList();
+        }
+
+        /// <summary>
+        /// Returns a list of vehicles sorted by the specified property.
+        /// </summary>
+        /// <param name="prop">Name of the property to sort by</param>
+        /// <param name="descending"></param>
+        /// <returns></returns>
+        public List<Vehicle> SortByProperty(string prop, bool descending)
+        {
+            var query = storage.Select(o => o);
+
+            if (descending)
+            {
+                query = query
+                        .OrderByDescending(v => v.GetType()
+                        .GetProperty(prop)
+                        .GetValue(v, null));
+            }
+            else
+            {
+                query = query
+                        .OrderBy(v => v.GetType()
+                        .GetProperty(prop)
+                        .GetValue(v, null));
+            }
 
             return query.ToList();
         }
