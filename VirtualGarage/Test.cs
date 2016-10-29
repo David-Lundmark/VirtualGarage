@@ -8,31 +8,7 @@ namespace VirtualGarage
 {
     class Test
     {
-        public static void Test1(Garage<Vehicle> g)
-        {
-            foreach (var item in g)
-            {
-                if (item != null)
-                {
-                    Console.WriteLine(item.ToString());
-                }
-            }
-        }
-
-        public static void Test2(Garage<Vehicle> g, Type t)
-        {
-            var subset = g.GetVehiclesByType(t);
-
-            foreach (var item in subset)
-            {
-                if (item != null)
-                {
-                    Console.WriteLine(item.GetVehicleType());
-                }
-            }
-        }
-
-        public static void Test3(Vehicle v)
+        public static void TestProps(Vehicle v)
         {
             var subset = v.GetDescribedProperties();
 
@@ -45,7 +21,7 @@ namespace VirtualGarage
             }
         }
 
-        public static void Test4(Garage<Vehicle> g)
+        public static void TestReg(Garage<Vehicle> g)
         {
             var sort = g.SortByProperty("Registration", false);
 

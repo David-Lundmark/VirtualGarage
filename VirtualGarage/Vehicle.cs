@@ -13,6 +13,11 @@ namespace VirtualGarage
     {
         public Guid ID { get; private set; }
 
+        static List<string> _validtypes;
+
+        [Description("Typ")]
+        public static string Type { get; protected set; } = "*FEL*";
+
         [Description("Registeringsnummer")]
         public string Registration { get; private set; }
 
@@ -27,6 +32,11 @@ namespace VirtualGarage
 
         public Vehicle()
         {
+            if (_validtypes == null)
+            {
+                PopulateValidTypeList();
+            }
+
             ID = Guid.NewGuid();
         }
 
@@ -36,11 +46,6 @@ namespace VirtualGarage
             Color = color;
             NumWheels = numwheels;
             NumPassengers = numpassengers;
-        }
-
-        public virtual string GetVehicleType()
-        {
-            throw new NotSupportedException();
         }
 
         /// <summary>
@@ -55,10 +60,34 @@ namespace VirtualGarage
 
             return query.ToList();
         }
+
+        private void PopulateValidTypeList()
+        {
+            _validtypes = new List<string>();
+
+            var subclasses = from assembly in AppDomain.CurrentDomain.GetAssemblies()
+                             from type in assembly.GetTypes()
+                             where type.IsSubclassOf(typeof(Vehicle))
+                             select type;
+
+            foreach (var item in subclasses)
+            {
+                var val = item.GetProperty("Type").GetValue(this, null);
+                _validtypes.Add(val.ToString());
+            }
+        }
+
+        public static List<string> GetValidTypes()
+        {
+            return _validtypes;
+        }
     }
 
     class Airplane : Vehicle
     {
+        [Description("Typ")]
+        public static new string Type { get; protected set; } = "Flygplan";
+
         [Description("Antal motorer")]
         public int NumEngines { get; private set; }
 
@@ -66,58 +95,45 @@ namespace VirtualGarage
         {
             NumEngines = numengines;
         }
-
-        public override string GetVehicleType()
-        {
-            return "Flygplan";
-        }
     }
 
     class Motorcycle : Vehicle
     {
+        [Description("Typ")]
+        public static new string Type { get; protected set; } = "Motorcykel";
+
         public Motorcycle(string registration, string color, int numwheels, int numpassengers) : base(registration, color, numwheels, numpassengers)
         {
-        }
-
-        public override string GetVehicleType()
-        {
-            return "Motorcykel";
         }
     }
 
     class Car : Vehicle
     {
+        [Description("Typ")]
+        public static new string Type { get; protected set; } = "Bil";
+
         public Car(string registration, string color, int numwheels, int numpassengers) : base(registration, color, numwheels, numpassengers)
         {
-        }
-
-        public override string GetVehicleType()
-        {
-            return "Bil";
         }
     }
 
     class Bus : Vehicle
     {
+        [Description("Typ")]
+        public static new string Type { get; protected set; } = "Buss";
+
         public Bus(string registration, string color, int numwheels, int numpassengers) : base(registration, color, numwheels, numpassengers)
         {
-        }
-
-        public override string GetVehicleType()
-        {
-            return "Buss";
         }
     }
 
     class Boat : Vehicle
     {
+        [Description("Typ")]
+        public static new string Type { get; protected set; } = "Båt";
+
         public Boat(string registration, string color, int numwheels, int numpassengers) : base(registration, color, numwheels, numpassengers)
         {
-        }
-
-        public override string GetVehicleType()
-        {
-            return "Båt";
         }
     }
 }

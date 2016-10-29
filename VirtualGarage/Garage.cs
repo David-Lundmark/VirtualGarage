@@ -87,18 +87,18 @@ namespace VirtualGarage
         /// <returns></returns>
         public List<Vehicle> SortByProperty(string prop, bool descending)
         {
-            var query = storage.Select(o => o);
+            IOrderedEnumerable<Vehicle> query;
 
             if (descending)
             {
-                query = query
+                query = storage
                         .OrderByDescending(v => v.GetType()
                         .GetProperty(prop)
                         .GetValue(v, null));
             }
             else
             {
-                query = query
+                query = storage
                         .OrderBy(v => v.GetType()
                         .GetProperty(prop)
                         .GetValue(v, null));
