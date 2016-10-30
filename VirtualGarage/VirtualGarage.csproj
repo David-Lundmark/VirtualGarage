@@ -42,8 +42,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Garage.cs" />
+    <Compile Include="HelperClasses.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="PropertyDescriptionAttribute.cs" />
     <Compile Include="Test.cs" />
     <Compile Include="UI.cs" />
     <Compile Include="Vehicle.cs" />

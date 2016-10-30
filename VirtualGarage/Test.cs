@@ -8,9 +8,9 @@ namespace VirtualGarage
 {
     class Test
     {
-        public static void TestProps(Vehicle v)
+        public static void TestProps()
         {
-            var subset = v.GetDescribedProperties();
+            var subset = Vehicle.GetDescribedProperties();
 
             foreach (var item in subset)
             {

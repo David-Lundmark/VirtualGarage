@@ -12,7 +12,7 @@ namespace VirtualGarage
 
         static void Main(string[] args)
         {
-            Garage<Vehicle> gar = new Garage<Vehicle>(5);
+            Garage<Vehicle> gar = new Garage<Vehicle>(10);
             TestInit(gar);
 
             UI.Init(gar);
@@ -22,12 +22,12 @@ namespace VirtualGarage
         {
             gar.Add(new Airplane("HGF564", "Vit", 3, 2, 2));
             gar.Add(new Car("KSY809", "Blå", 4, 5));
-            gar.Add(new Boat("PPI136", "Röd", 0, 4));
+            gar.Add(new Boat("PPI136", "Röd", 4));
             gar.Add(new Airplane("UGB741", "Grå", 3, 8, 2));
-            gar.Add(new Boat("HAE323", "Gul", 0, 6));
+            gar.Add(new Boat("HAE323", "Gul", 6));
             gar.Add(new Car("YUK615", "Svart", 4, 2));
 
-            //Test.TestProps(gar.First());
+            //Test.TestProps();
             //Test.TestReg(gar);
         }
     }

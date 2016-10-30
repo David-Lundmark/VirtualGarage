@@ -9,130 +9,183 @@ using System.ComponentModel;
 namespace VirtualGarage
 {
     [Serializable]
-    class Vehicle
+    abstract class Vehicle
     {
-        public Guid ID { get; private set; }
-
         static List<string> _validtypes;
+        static List<string> _rawprops;
+        static List<string> _descprops;
 
-        [Description("Typ")]
-        public static string Type { get; protected set; } = "*FEL*";
+        protected static string _type { get; } = "*FEL*";
 
-        [Description("Registeringsnummer")]
+        protected Guid ID { get; private set; }
+
+        [PropertyDescription("Typ")]
+        public string Type { get { return GetType().GetProperty("_type", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null, null).ToString(); } }
+
+        [PropertyDescription("Registeringsnummer")]
         public string Registration { get; private set; }
 
-        [Description("Färg")]
+        [PropertyDescription("Färg")]
         public string Color { get; private set; }
 
-        [Description("Antal hjul")]
-        public int NumWheels { get; private set; }
-
-        [Description("Antal passagerare")]
+        [PropertyDescription("Antal passagerare")]
         public int NumPassengers { get; private set; }
 
         public Vehicle()
         {
-            if (_validtypes == null)
-            {
-                PopulateValidTypeList();
-            }
-
             ID = Guid.NewGuid();
         }
 
-        public Vehicle(string registration, string color, int numwheels, int numpassengers) : this()
+        public Vehicle(string registration, string color, int numpassengers) : this()
         {
             Registration = registration;
             Color = color;
-            NumWheels = numwheels;
             NumPassengers = numpassengers;
         }
 
         /// <summary>
-        /// Extracts the description from all public properties in this and any inherited class
+        /// Extracts the property descriptions of all public properties in this and any inherited class.
         /// </summary>
         /// <returns></returns>
-        public List<string> GetDescribedProperties()
+        public static List<string> GetDescribedProperties()
         {
-            var query = this.GetType().GetProperties()
-                        .Where(p => p.GetCustomAttribute(typeof(DescriptionAttribute), true) != null)
-                        .Select(s => ((DescriptionAttribute)s.GetCustomAttributes(typeof(DescriptionAttribute), true)[0]).Description);
-
-            return query.ToList();
-        }
-
-        private void PopulateValidTypeList()
-        {
-            _validtypes = new List<string>();
-
-            var subclasses = from assembly in AppDomain.CurrentDomain.GetAssemblies()
-                             from type in assembly.GetTypes()
-                             where type.IsSubclassOf(typeof(Vehicle))
-                             select type;
-
-            foreach (var item in subclasses)
+            if (_descprops == null)
             {
-                var val = item.GetProperty("Type").GetValue(this, null);
-                _validtypes.Add(val.ToString());
+                _descprops = new List<string>();
+
+                var subclasses = HelperMethods.GetDerivedConcreteClasses(typeof(Vehicle));
+
+                foreach (var item in subclasses)
+                {
+                    var query = item.GetProperties()
+                            .Where(p => p.GetCustomAttribute(typeof(PropertyDescriptionAttribute), false) != null)
+                            .Select(s => ((PropertyDescriptionAttribute)s.GetCustomAttributes(typeof(PropertyDescriptionAttribute), false)[0]).Description);
+
+                    _descprops.InsertRange(0, query.ToList());
+                }
+
+                _descprops = _descprops.Distinct().ToList();
             }
+
+            return _descprops;
         }
 
+        /// <summary>
+        /// Extracts the names of all public properties in this and any inherited class.
+        /// </summary>
+        /// <returns></returns>
+        public static List<string> GetRawProperties()
+        {
+            if (_rawprops == null)
+            {
+                _rawprops = new List<string>();
+
+                var subclasses = HelperMethods.GetDerivedConcreteClasses(typeof(Vehicle));
+
+                foreach (var item in subclasses)
+                {
+                    var query = item.GetProperties()
+                            .Select(s => s.Name);
+
+                    _rawprops.InsertRange(0, query.ToList());
+                }
+
+                _rawprops = _rawprops.Distinct().ToList();
+            }
+
+            return _rawprops;
+        }
+
+        /// <summary>
+        /// Extracts the valid types of this and any inherited class as strings ("Bil", "Båt" etc).
+        /// </summary>
+        /// <returns></returns>
         public static List<string> GetValidTypes()
         {
+            if (_validtypes == null)
+            {
+                _validtypes = new List<string>();
+
+                var subclasses = HelperMethods.GetDerivedConcreteClasses(typeof(Vehicle));
+
+                foreach (var item in subclasses)
+                {
+                    var val = item.GetProperty("_type", BindingFlags.Static | BindingFlags.NonPublic);
+
+                    if (val != null)
+                    {
+                        var val2 = val.GetValue(null, null);
+                        _validtypes.Add(val2.ToString());
+                        //Console.WriteLine(val.ToString());
+                    }
+                }
+            }
+
             return _validtypes;
+        }
+
+        public string GetTypeString()
+        {
+            return GetType().GetProperty("Type").GetValue(this, null).ToString();
         }
     }
 
-    class Airplane : Vehicle
+    abstract class WheeledVehicle : Vehicle
     {
-        [Description("Typ")]
-        public static new string Type { get; protected set; } = "Flygplan";
+        [PropertyDescription("Antal hjul")]
+        public int NumWheels { get; private set; }
 
-        [Description("Antal motorer")]
+        public WheeledVehicle(string registration, string color, int numpassengers, int numwheels) : base(registration, color, numpassengers)
+        {
+            NumWheels = numwheels;
+        }
+    }
+
+    class Airplane : WheeledVehicle
+    {
+        protected static new string _type { get; } = "Flygplan";
+
+        [PropertyDescription("Antal motorer")]
         public int NumEngines { get; private set; }
 
-        public Airplane(string registration, string color, int numwheels, int numpassengers, int numengines) : base(registration, color, numwheels, numpassengers)
+        public Airplane(string registration, string color, int numwheels, int numpassengers, int numengines) : base(registration, color, numpassengers, numwheels)
         {
             NumEngines = numengines;
         }
     }
 
-    class Motorcycle : Vehicle
+    class Motorcycle : WheeledVehicle
     {
-        [Description("Typ")]
-        public static new string Type { get; protected set; } = "Motorcykel";
+        protected static new string _type { get; } = "Motorcykel";
 
-        public Motorcycle(string registration, string color, int numwheels, int numpassengers) : base(registration, color, numwheels, numpassengers)
+        public Motorcycle(string registration, string color, int numwheels, int numpassengers) : base(registration, color, numpassengers, numwheels)
         {
         }
     }
 
-    class Car : Vehicle
+    class Car : WheeledVehicle
     {
-        [Description("Typ")]
-        public static new string Type { get; protected set; } = "Bil";
+        protected static new string _type { get; } = "Bil";
 
-        public Car(string registration, string color, int numwheels, int numpassengers) : base(registration, color, numwheels, numpassengers)
+        public Car(string registration, string color, int numwheels, int numpassengers) : base(registration, color, numpassengers, numwheels)
         {
         }
     }
 
-    class Bus : Vehicle
+    class Bus : WheeledVehicle
     {
-        [Description("Typ")]
-        public static new string Type { get; protected set; } = "Buss";
+        protected static new string _type { get; } = "Buss";
 
-        public Bus(string registration, string color, int numwheels, int numpassengers) : base(registration, color, numwheels, numpassengers)
+        public Bus(string registration, string color, int numwheels, int numpassengers) : base(registration, color, numpassengers, numwheels)
         {
         }
     }
 
     class Boat : Vehicle
     {
-        [Description("Typ")]
-        public static new string Type { get; protected set; } = "Båt";
+        protected static new string _type { get; } = "Båt";
 
-        public Boat(string registration, string color, int numwheels, int numpassengers) : base(registration, color, numwheels, numpassengers)
+        public Boat(string registration, string color, int numpassengers) : base(registration, color, numpassengers)
         {
         }
     }
