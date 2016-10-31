@@ -20,12 +20,12 @@ namespace VirtualGarage
 
         static void TestInit(Garage<Vehicle> gar)
         {
-            gar.Add(new Airplane("HGF564", "Vit", 3, 2, 2));
-            gar.Add(new Car("KSY809", "Blå", 4, 5));
-            gar.Add(new Boat("PPI136", "Röd", 4));
-            gar.Add(new Airplane("UGB741", "Grå", 3, 8, 2));
+            gar.Add(new Airplane("HGF564", "Vit", 2, 3, 2));
+            gar.Add(new Car("KSY809", "Blå", 5, 4));
+            gar.Add(new Boat("PPI136", "Röd", 5));
+            gar.Add(new Airplane("UGB741", "Grå", 8, 3, 2));
             gar.Add(new Boat("HAE323", "Gul", 6));
-            gar.Add(new Car("YUK615", "Svart", 4, 2));
+            gar.Add(new Bus("YUK615", "Svart", 40, 4));
 
             //Test.TestProps();
             //Test.TestReg(gar);

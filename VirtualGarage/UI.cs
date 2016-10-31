@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Reflection;
 using System.Collections;
+using System.Runtime.Remoting;
 
 namespace VirtualGarage
 {
@@ -273,11 +274,13 @@ namespace VirtualGarage
                                     {
                                         Type vehtype = HelperMethods.GetDerivedConcreteClasses(typeof(Vehicle)).ElementAt(sel - 1);
                                         //Console.WriteLine(vehtype);
-                                        GenericMessage("Fordonet lades till!\n", ConsoleColor.White);
-                                        object[] args = {"ABC123", "Svart", 1, 1, 1};
-                                        object obj = Activator.CreateInstance(vehtype, args);
-                                        Console.WriteLine(obj);
-                                        //garage.Add(obj);
+                                        var obj = (Vehicle)vehtype.InvokeMember("CreateEmpty", BindingFlags.Static | BindingFlags.InvokeMethod | BindingFlags.Public, null, null, null);
+                                        //Console.WriteLine(obj);
+                                        if (GetValidFields(obj))
+                                        {
+                                            garage.Add(obj);
+                                            GenericMessage("\nFordonet lades till!\n", ConsoleColor.White);
+                                        }
                                     }
                                 }
                             }
@@ -458,6 +461,24 @@ namespace VirtualGarage
             } while (!done);
 
             return (int)sel;
+        }
+
+        static bool GetValidFields(Vehicle veh)
+        {
+            List<string> org = Vehicle.GetRawProperties(true);
+            List<string> swe = Vehicle.GetDescribedProperties(true);
+
+            for (int i = 0; i < org.Count; i++)
+            {
+                var prop = veh.GetType().GetProperty(org[i]);
+
+                if (prop != null)
+                {
+                    Console.Write("Ange värde för '{0}': ", swe[i]);
+                    Console.ReadLine();
+                }
+            }
+            return true;
         }
 
         static bool GetConfirmation(string message, char confirm = 'j', ConsoleColor color = ConsoleColor.Yellow)
