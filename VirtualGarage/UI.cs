@@ -117,11 +117,11 @@ namespace VirtualGarage
         }
         */
 
-        static string GetInput()
+        static string GetInput(bool allowNull = false)
         {
             string temp = Console.ReadLine();
 
-            if (temp == null)
+            if (temp == null && allowNull == false)
             {
                 temp = "";
             }
@@ -474,8 +474,37 @@ namespace VirtualGarage
 
                 if (prop != null)
                 {
-                    Console.Write("Ange värde för '{0}': ", swe[i]);
-                    Console.ReadLine();
+                    bool done = false;
+                    var type = prop.PropertyType;
+
+                    do
+                    {
+                        Console.WriteLine("(Mata in Ctrl + Z om du vill avbryta operationen.)");
+                        Console.Write("Ange värde för '{0}': ", swe[i]);
+                        var input = GetInput(true);
+                        if (input != null)
+                        {
+                            try
+                            {
+                                if (input != "" || (input == "" && GetConfirmation("Vill du verkligen ange ett tomt värde? (J/N)")))
+                                {
+                                    prop.SetValue(veh, Convert.ChangeType(input, type));
+                                    done = true;
+                                }
+                            }
+                            catch
+                            {
+                                GenericMessage("Felaktig inmatning; försök igen!", ConsoleColor.Yellow);
+                            }
+                        }
+                        else
+                        {
+                            if (GetConfirmation("Vill du återvända till huvudmenyn utan att skapa ett fordon? (J/N)"))
+                            {
+                                return false;
+                            }
+                        }
+                    } while (!done);
                 }
             }
             return true;
