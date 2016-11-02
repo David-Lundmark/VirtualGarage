@@ -244,7 +244,8 @@ namespace VirtualGarage
                         case 'v':
                             if (garage != null)
                             {
-                                DisplayVehicleInfo();
+                                Console.WriteLine("Fordon:\n");
+                                DisplayVehicleInfo(garage.ToList(), true);
                             }
                             else
                             {
@@ -254,6 +255,14 @@ namespace VirtualGarage
                         
                         // Search for vehicles
                         case 's':
+                            if (garage != null)
+                            {
+                                SearchVehicles();
+                            }
+                            else
+                            {
+                                NullGarageError();
+                            }
                             break;
                         
                         // Add vehicle
@@ -268,7 +277,7 @@ namespace VirtualGarage
                                 {
                                     Console.WriteLine("\nVälj typ av fordon att lägga till:");
                                     int count = DisplayNumberedList(Vehicle.GetValidTypes());
-                                    AbortMessage();
+                                    AbortOptionMessage();
                                     int sel = GetNumber(0, count);
                                     if (sel > 0)
                                     {
@@ -278,8 +287,8 @@ namespace VirtualGarage
                                         //Console.WriteLine(obj);
                                         if (GetValidFields(obj))
                                         {
-                                            garage.Add(obj);
                                             GenericMessage("\nFordonet lades till!\n", ConsoleColor.White);
+                                            garage.Add(obj);
                                         }
                                     }
                                 }
@@ -302,7 +311,7 @@ namespace VirtualGarage
                                 {
                                     Console.WriteLine("\nVälj ett fordon att ta bort:");
                                     int count = DisplayNumberedList(MakeVehicleList());
-                                    AbortMessage();
+                                    AbortOptionMessage();
                                     int sel = GetNumber(0, count);
                                     if (sel > 0)
                                     {
@@ -311,6 +320,10 @@ namespace VirtualGarage
                                         {
                                             GenericMessage("Fordonet togs bort!\n", ConsoleColor.White);
                                             garage.Remove(veh);
+                                        }
+                                        else
+                                        {
+                                            GenericMessage("Åtgärden avbröts.\n", ConsoleColor.Yellow);
                                         }
                                     }
                                 }
@@ -342,9 +355,8 @@ namespace VirtualGarage
             return true;
         }
 
-        static void DisplayVehicleInfo()
+        static void DisplayVehicleInfo(List<Vehicle> group, bool showTotal, string searchProp = null)
         {
-            Console.WriteLine("Fordon\n");
             Console.ForegroundColor = ConsoleColor.Cyan;
 
             foreach (var item in Vehicle.GetDescribedProperties())
@@ -354,30 +366,50 @@ namespace VirtualGarage
 
             Console.WriteLine();
 
-            var group = garage.OrderBy(v => v.Type).Select(v => v);
+            var searchGroup = group.OrderBy(v => v.Type).Select(v => v);
             int ctr = 0;
-            foreach (var veh in group)
+            foreach (var veh in searchGroup)
             {
                 ctr++;
                 foreach (var item in Vehicle.GetRawProperties())
                 {
                     var prop = veh.GetType().GetProperty(item);
+                    Console.ResetColor();
 
                     if (prop != null)
                     {
-                        Console.ForegroundColor = ConsoleColor.Gray;
+                        if (searchProp == item)
+                        {
+                            Console.ForegroundColor = ConsoleColor.White;
+                            Console.BackgroundColor = ConsoleColor.Blue;
+                        }
                         Console.Write("{0, -20}", prop.GetValue(veh, null));
                     }
                     else
                     {
-                        Console.ForegroundColor = ConsoleColor.DarkGray;
+                        if (searchProp == item)
+                        {
+                            Console.ForegroundColor = ConsoleColor.White;
+                            Console.BackgroundColor = ConsoleColor.Blue;
+                        }
+                        else
+                        {
+                            Console.ForegroundColor = ConsoleColor.DarkGray;
+                        }
                         Console.Write("{0, -20}", "-");
                     }
                 }
                 Console.WriteLine();
             }
-            Console.ForegroundColor = ConsoleColor.Gray;
-            Console.WriteLine("\n{0} av totalt {1} fordon\n", ctr, garage.Count());
+            if (showTotal)
+            {
+                Console.ForegroundColor = ConsoleColor.Gray;
+                Console.WriteLine("\n{0} av totalt {1} fordon\n", ctr, searchGroup.Count());
+            }
+            else
+            {
+                Console.WriteLine();
+            }
         }
 
         static int DisplayNumberedList(List<string> contents)
@@ -412,7 +444,7 @@ namespace VirtualGarage
             Console.ForegroundColor = old;
         }
 
-        static void AbortMessage(string message = "0. Avbryt\n", ConsoleColor color = ConsoleColor.DarkYellow)
+        static void AbortOptionMessage(string message = "0. Avbryt\n", ConsoleColor color = ConsoleColor.DarkYellow)
         {
             GenericMessage(message, color);
         }
@@ -463,53 +495,6 @@ namespace VirtualGarage
             return (int)sel;
         }
 
-        static bool GetValidFields(Vehicle veh)
-        {
-            List<string> org = Vehicle.GetRawProperties(true);
-            List<string> swe = Vehicle.GetDescribedProperties(true);
-
-            for (int i = 0; i < org.Count; i++)
-            {
-                var prop = veh.GetType().GetProperty(org[i]);
-
-                if (prop != null)
-                {
-                    bool done = false;
-                    var type = prop.PropertyType;
-
-                    do
-                    {
-                        Console.WriteLine("(Mata in Ctrl + Z om du vill avbryta operationen.)");
-                        Console.Write("Ange värde för '{0}': ", swe[i]);
-                        var input = GetInput(true);
-                        if (input != null)
-                        {
-                            try
-                            {
-                                if (input != "" || (input == "" && GetConfirmation("Vill du verkligen ange ett tomt värde? (J/N)")))
-                                {
-                                    prop.SetValue(veh, Convert.ChangeType(input, type));
-                                    done = true;
-                                }
-                            }
-                            catch
-                            {
-                                GenericMessage("Felaktig inmatning; försök igen!", ConsoleColor.Yellow);
-                            }
-                        }
-                        else
-                        {
-                            if (GetConfirmation("Vill du återvända till huvudmenyn utan att skapa ett fordon? (J/N)"))
-                            {
-                                return false;
-                            }
-                        }
-                    } while (!done);
-                }
-            }
-            return true;
-        }
-
         static bool GetConfirmation(string message, char confirm = 'j', ConsoleColor color = ConsoleColor.Yellow)
         {
             if (message != null)
@@ -531,6 +516,158 @@ namespace VirtualGarage
             }
 
             return false;
+        }
+
+        static bool GetValidFields(Vehicle veh)
+        {
+            const int maxInputLength = 18;
+
+            List<string> org = Vehicle.GetRawProperties(true);
+            List<string> swe = Vehicle.GetDescribedProperties(true);
+
+            for (int i = 0; i < org.Count; i++)
+            {
+                var prop = veh.GetType().GetProperty(org[i]);
+
+                if (prop != null)
+                {
+                    bool done = false;
+                    var type = prop.PropertyType;
+
+                    do
+                    {
+                        Console.WriteLine("(Mata in Ctrl + Z om du vill avbryta operationen.)");
+                        Console.Write("Ange värde för '{0}': ", swe[i]);
+                        var input = GetInput(true);
+                        if (input != null)
+                        {
+                            if (input.Length > maxInputLength)
+                            {
+                                input = input.Substring(0, Math.Min(input.Length, maxInputLength));
+                                GenericMessage(string.Format("OBS: Värdets längd trunkerades till {0} tecken!", maxInputLength), ConsoleColor.White);
+                            }
+                            if (input != "" || (input == "" && GetConfirmation("Vill du verkligen ange ett tomt värde? (J/N)")))
+                            {
+                                try
+                                {
+                                    prop.SetValue(veh, Convert.ChangeType(input, type));
+                                    done = true;
+                                }
+                                catch
+                                {
+                                    GenericMessage(string.Format("Felaktig inmatning; försök ange ett värde av typen '{0}'!", type), ConsoleColor.Yellow);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if (GetConfirmation("Vill du återvända till huvudmenyn utan att skapa ett fordon? (J/N)"))
+                            {
+                                return false;
+                            }
+                        }
+                    } while (!done);
+                }
+            }
+
+            veh.Registration = veh.Registration.ToUpper();
+            if (veh.Color.Length > 0)
+            {
+                veh.Color = veh.Color.Substring(0, 1).ToUpper() + veh.Color.Substring(1).ToLower();
+            }
+
+            return true;
+        }
+
+        static bool SearchVehicles()
+        {
+            List<string> org = Vehicle.GetRawProperties(true);
+            List<string> swe = Vehicle.GetDescribedProperties(true);
+            string input;
+            string searchKey;
+            string searchSweKey;
+
+            Console.WriteLine("Välj söknyckel:");
+            int max = DisplayNumberedList(swe);
+            AbortOptionMessage();
+            int sel = GetNumber(0, max);
+
+            if (sel == 0)
+            {
+                GenericMessage("Sökningen avbröts.\n", ConsoleColor.Yellow);
+                return false;
+            }
+            else
+            {
+                searchKey = org.ElementAt(sel - 1);
+                searchSweKey = swe.ElementAt(sel - 1);
+                Console.WriteLine();
+            }
+
+            do
+            {
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.Write("Söknyckel: {0} ", searchSweKey);
+                Console.ForegroundColor = ConsoleColor.DarkGray;
+                Console.WriteLine("('{0}')", searchKey);
+                Console.ForegroundColor = ConsoleColor.Gray;
+                Console.WriteLine("Skriv in ett värde att söka efter eller '-' för att söka efter fordon som saknar värdet; alt. tryck Enter för att avbryta.");
+                input = GetInput();
+                if (input == "")
+                {
+                    if (GetConfirmation("Vill du avbryta sökningen? (J/N)"))
+                    {
+                        GenericMessage("Sökningen avbröts.\n", ConsoleColor.Yellow);
+                        return false;
+                    }
+                }
+            } while (input == "");
+
+            string searchValue = input.ToUpper();
+
+            Console.WriteLine();
+
+            List<Vehicle> searchGroup = new List<Vehicle>();
+
+            foreach (var veh in garage)
+            {
+                var specialCase = true;
+                var props = veh.GetType().GetProperties();
+                var query = props.Where(p => p.Name == searchKey)
+                                 .Where(p => p.GetValue(veh, null) != null)
+                                 .Select(p => p.GetValue(veh, null).ToString());
+
+                if (query != null)
+                {
+                    var temp = query.Take(1);
+                    if (temp.Count() > 0)
+                    {
+                        specialCase = false;
+
+                        if (temp.First().ToUpper().Contains(searchValue))
+                        {
+                            searchGroup.Add(veh);
+                        }
+                    }
+                }
+
+                if (specialCase && searchValue == "-")
+                {
+                    searchGroup.Add(veh);
+                }
+            }
+
+            if (searchGroup.Count() > 0)
+            {
+                Console.WriteLine("Sökresultat för '{0}':\n", searchValue);
+                DisplayVehicleInfo(searchGroup, false, searchKey);
+            }
+            else
+            {
+                GenericMessage(string.Format("Inga resultat hittades för '{0}'!\n", searchValue), ConsoleColor.Yellow);
+            }
+
+            return true;
         }
     }
 }

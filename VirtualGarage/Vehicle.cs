@@ -13,8 +13,6 @@ namespace VirtualGarage
     abstract class Vehicle
     {
         static List<string> _validtypes;
-        static List<string> _rawprops;
-        static List<string> _descprops;
 
         protected static string _type => "*FEL*";
 
@@ -51,24 +49,21 @@ namespace VirtualGarage
         /// <returns></returns>
         public static List<string> GetDescribedProperties(bool requirePublicSetter = false)
         {
-            if (_descprops == null)
+            var _descprops = new List<string>();
+
+            var subclasses = HelperMethods.GetDerivedConcreteClasses(typeof(Vehicle));
+
+            foreach (var item in subclasses)
             {
-                _descprops = new List<string>();
+                var query = item.GetProperties()
+                        .Where(p => p.GetCustomAttribute(typeof(PropertyDescriptionAttribute), false) != null)
+                        .Where(p => !(p.SetMethod == null && requirePublicSetter == true))
+                        .Select(s => ((PropertyDescriptionAttribute)s.GetCustomAttributes(typeof(PropertyDescriptionAttribute), false)[0]).Description);
 
-                var subclasses = HelperMethods.GetDerivedConcreteClasses(typeof(Vehicle));
-
-                foreach (var item in subclasses)
-                {
-                    var query = item.GetProperties()
-                            .Where(p => p.GetCustomAttribute(typeof(PropertyDescriptionAttribute), false) != null)
-                            .Where(p => !(p.SetMethod == null && requirePublicSetter == true))
-                            .Select(s => ((PropertyDescriptionAttribute)s.GetCustomAttributes(typeof(PropertyDescriptionAttribute), false)[0]).Description);
-
-                    _descprops.InsertRange(0, query.ToList());
-                }
-
-                _descprops = _descprops.Distinct().ToList();
+                _descprops.InsertRange(0, query.ToList());
             }
+
+            _descprops = _descprops.Distinct().ToList();
 
             return _descprops;
         }
@@ -105,24 +100,21 @@ namespace VirtualGarage
         /// <returns></returns>
         public static List<string> GetRawProperties(bool requirePublicSetter = false)
         {
-            if (_rawprops == null)
+            var _rawprops = new List<string>();
+
+            var subclasses = HelperMethods.GetDerivedConcreteClasses(typeof(Vehicle));
+
+            foreach (var item in subclasses)
             {
-                _rawprops = new List<string>();
+                var query = item.GetProperties()
+                            .Where(p => p.GetCustomAttribute(typeof(PropertyDescriptionAttribute), false) != null)
+                            .Where(p => !(p.SetMethod == null && requirePublicSetter == true))
+                            .Select(p => p.Name);
 
-                var subclasses = HelperMethods.GetDerivedConcreteClasses(typeof(Vehicle));
-
-                foreach (var item in subclasses)
-                {
-                    var query = item.GetProperties()
-                                .Where(p => p.GetCustomAttribute(typeof(PropertyDescriptionAttribute), false) != null)
-                                .Where(p => !(p.SetMethod == null && requirePublicSetter == true))
-                                .Select(p => p.Name);
-
-                    _rawprops.InsertRange(0, query.ToList());
-                }
-
-                _rawprops = _rawprops.Distinct().ToList();
+                _rawprops.InsertRange(0, query.ToList());
             }
+
+            _rawprops = _rawprops.Distinct().ToList();
 
             return _rawprops;
         }
