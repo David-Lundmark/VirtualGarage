@@ -22,7 +22,7 @@ namespace VirtualGarage
         public static void Init(Garage<Vehicle> g = null)
         {
             appRunning = true;
-            Console.SetWindowSize(Console.LargestWindowWidth / 2, Console.LargestWindowHeight / 2);
+            Console.SetWindowSize((int)(Console.LargestWindowWidth * 0.75), (int)(Console.LargestWindowHeight * 0.75));
             InitPages();
             SetGarage(g);
             DoInputLoop();
@@ -71,7 +71,12 @@ namespace VirtualGarage
                     break;
 
                 case Page.Main:
+                    if (garage == null)
+                    {
+                        Console.ForegroundColor = ConsoleColor.White;
+                    }
                     Console.WriteLine("N. Skapa ett nytt garage");
+                    Console.ResetColor();
                     if (garage == null)
                     {
                         Console.ForegroundColor = ConsoleColor.DarkGray;
@@ -139,13 +144,13 @@ namespace VirtualGarage
 
             char c = input.ToLower()[0];
 
-            switch(currentPage)
+            switch (currentPage)
             {
                 case Page.Empty:
                     break;
 
                 case Page.Main:
-                    switch(c)
+                    switch (c)
                     {
                         // New garage
                         case 'n':
@@ -205,8 +210,12 @@ namespace VirtualGarage
                                 Console.ForegroundColor = ConsoleColor.White;
                                 Console.WriteLine("\nEtt nytt garage har skapats.\n");
                             }
+                            else
+                            {
+                                AbortedMessage();
+                            }
                             break;
-                        
+
                         // Overview
                         case 'ö':
                             if (garage != null)
@@ -239,7 +248,7 @@ namespace VirtualGarage
                                 NullGarageError();
                             }
                             break;
-                        
+
                         // Show vehicles
                         case 'v':
                             if (garage != null)
@@ -252,19 +261,26 @@ namespace VirtualGarage
                                 NullGarageError();
                             }
                             break;
-                        
+
                         // Search for vehicles
                         case 's':
                             if (garage != null)
                             {
-                                SearchVehicles();
+                                if (garage.Count() == 0)
+                                {
+                                    GenericMessage("Garaget är tomt!", ConsoleColor.Yellow);
+                                }
+                                else
+                                {
+                                    SearchVehicles();
+                                }
                             }
                             else
                             {
                                 NullGarageError();
                             }
                             break;
-                        
+
                         // Add vehicle
                         case 'l':
                             if (garage != null)
@@ -283,13 +299,17 @@ namespace VirtualGarage
                                     {
                                         Type vehtype = HelperMethods.GetDerivedConcreteClasses(typeof(Vehicle)).ElementAt(sel - 1);
                                         //Console.WriteLine(vehtype);
-                                        var obj = (Vehicle)vehtype.InvokeMember("CreateEmpty", BindingFlags.Static | BindingFlags.InvokeMethod | BindingFlags.Public, null, null, null);
+                                        var obj = (Vehicle)vehtype.InvokeMember("Create", BindingFlags.Static | BindingFlags.InvokeMethod | BindingFlags.Public, null, null, null);
                                         //Console.WriteLine(obj);
                                         if (GetValidFields(obj))
                                         {
                                             GenericMessage("\nFordonet lades till!\n", ConsoleColor.White);
                                             garage.Add(obj);
                                         }
+                                    }
+                                    else
+                                    {
+                                        AbortedMessage();
                                     }
                                 }
                             }
@@ -298,7 +318,7 @@ namespace VirtualGarage
                                 NullGarageError();
                             }
                             break;
-                        
+
                         // Remove vehicle
                         case 't':
                             if (garage != null)
@@ -323,7 +343,7 @@ namespace VirtualGarage
                                         }
                                         else
                                         {
-                                            GenericMessage("Åtgärden avbröts.\n", ConsoleColor.Yellow);
+                                            AbortedMessage();
                                         }
                                     }
                                 }
@@ -333,7 +353,7 @@ namespace VirtualGarage
                                 NullGarageError();
                             }
                             break;
-                        
+
                         // Quit
                         case 'x':
                             if (GetConfirmation("Är du säker på att du vill avsluta? (J/N)"))
@@ -341,7 +361,7 @@ namespace VirtualGarage
                                 Environment.Exit(0);
                             }
                             break;
-                        
+
                         default:
                             InvalidSelectionError();
                             break;
@@ -445,6 +465,11 @@ namespace VirtualGarage
         }
 
         static void AbortOptionMessage(string message = "0. Avbryt\n", ConsoleColor color = ConsoleColor.DarkYellow)
+        {
+            GenericMessage(message, color);
+        }
+
+        static void AbortedMessage(string message = "Åtgärden avbröts!\n", ConsoleColor color = ConsoleColor.Yellow)
         {
             GenericMessage(message, color);
         }
@@ -563,6 +588,7 @@ namespace VirtualGarage
                         {
                             if (GetConfirmation("Vill du återvända till huvudmenyn utan att skapa ett fordon? (J/N)"))
                             {
+                                AbortedMessage();
                                 return false;
                             }
                         }

@@ -18,29 +18,22 @@ namespace VirtualGarage
 
         protected Guid ID { get; private set; }
 
-        [PropertyDescription("Typ")]
-        public string Type { get { return GetType().GetProperty("_type", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null, null).ToString(); } }
-        //public string Type { get { return _type; } }
-
-        [PropertyDescription("Registeringsnummer")]
-        public string Registration { get; set; }
+        [PropertyDescription("Antal passagerare")]
+        public int NumPassengers { get; set; }
 
         [PropertyDescription("Färg")]
         public string Color { get; set; }
 
-        [PropertyDescription("Antal passagerare")]
-        public int NumPassengers { get; set; }
+        [PropertyDescription("Registeringsnummer")]
+        public string Registration { get; set; }
+
+        [PropertyDescription("Typ")]
+        public string Type { get { return GetType().GetProperty("_type", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null, null).ToString(); } }
+        //public string Type { get { return _type; } }
 
         public Vehicle()
         {
             ID = Guid.NewGuid();
-        }
-
-        public Vehicle(string registration, string color, int numpassengers) : this()
-        {
-            Registration = registration;
-            Color = color;
-            NumPassengers = numpassengers;
         }
 
         /// <summary>
@@ -60,10 +53,11 @@ namespace VirtualGarage
                         .Where(p => !(p.SetMethod == null && requirePublicSetter == true))
                         .Select(s => ((PropertyDescriptionAttribute)s.GetCustomAttributes(typeof(PropertyDescriptionAttribute), false)[0]).Description);
 
-                _descprops.InsertRange(0, query.ToList());
+                //_descprops.InsertRange(0, query.ToList());
+                _descprops.AddRange(query.ToList());
             }
 
-            _descprops = _descprops.Distinct().ToList();
+            _descprops = _descprops.Distinct().Reverse().ToList();
 
             return _descprops;
         }
@@ -111,10 +105,11 @@ namespace VirtualGarage
                             .Where(p => !(p.SetMethod == null && requirePublicSetter == true))
                             .Select(p => p.Name);
 
-                _rawprops.InsertRange(0, query.ToList());
+                //_rawprops.InsertRange(0, query.ToList());
+                _rawprops.AddRange(query.ToList());
             }
 
-            _rawprops = _rawprops.Distinct().ToList();
+            _rawprops = _rawprops.Distinct().Reverse().ToList();
 
             return _rawprops;
         }
@@ -158,84 +153,127 @@ namespace VirtualGarage
         [PropertyDescription("Antal hjul")]
         public int NumWheels { get; set; }
 
-        public WheeledVehicle(string registration, string color, int numpassengers, int numwheels) : base(registration, color, numpassengers)
+        public WheeledVehicle() : base()
         {
-            NumWheels = numwheels;
         }
-
     }
 
-    class Airplane : WheeledVehicle
+    abstract class PoweredVehicle : Vehicle
     {
-        protected static new string _type => "Flygplan";
-
         [PropertyDescription("Antal motorer")]
         public int NumEngines { get; set; }
 
-        public Airplane(string registration = "", string color = "", int numpassengers = 0, int numwheels = 0, int numengines = 0) : base(registration, color, numpassengers, numwheels)
+        public PoweredVehicle() : base()
         {
-            NumEngines = numengines;
+        }
+    }
+
+    abstract class WheeledPoweredVehicle : WheeledVehicle
+    {
+        [PropertyDescription("Antal motorer")]
+        public int NumEngines { get; set; }
+
+        public WheeledPoweredVehicle() : base()
+        {
+        }
+    }
+
+    class Airplane : WheeledPoweredVehicle
+    {
+        protected static new string _type => "Flygplan";
+
+        [PropertyDescription("Lastutrymme (m³)")]
+        public int CargoSpace { get; set; }
+
+        public Airplane() : base()
+        {
         }
 
-        public static Airplane CreateEmpty()
+        public static Airplane Create()
         {
             return new Airplane();
         }
     }
 
-    class Motorcycle : WheeledVehicle
+    class Motorcycle : WheeledPoweredVehicle
     {
         protected static new string _type => "Motorcykel";
 
-        public Motorcycle(string registration = "", string color = "", int numpassengers = 0, int numwheels = 0) : base(registration, color, numpassengers, numwheels)
+        public Motorcycle() : base()
         {
         }
 
-        public static Motorcycle CreateEmpty()
+        public static Motorcycle Create()
         {
             return new Motorcycle();
         }
     }
 
-    class Car : WheeledVehicle
+    class Car : WheeledPoweredVehicle
     {
         protected static new string _type => "Bil";
 
-        public Car(string registration = "", string color = "", int numpassengers = 0, int numwheels = 0) : base(registration, color, numpassengers, numwheels)
+        [PropertyDescription("Lastutrymme (m³)")]
+        public int CargoSpace { get; set; }
+
+        public Car() : base()
         {
         }
 
-        public static Car CreateEmpty()
+        public static Car Create()
         {
             return new Car();
         }
     }
 
-    class Bus : WheeledVehicle
+    class Bus : WheeledPoweredVehicle
     {
         protected static new string _type => "Buss";
 
-        public Bus(string registration = "", string color = "", int numpassengers = 0, int numwheels = 0) : base(registration, color, numpassengers, numwheels)
+        [PropertyDescription("Lastutrymme (m³)")]
+        public int CargoSpace { get; set; }
+
+        public Bus() : base()
         {
         }
 
-        public static Bus CreateEmpty()
+        public static Bus Create()
         {
             return new Bus();
         }
     }
 
-    class Boat : Vehicle
+    class Motorboat : PoweredVehicle
     {
-        protected static new string _type => "Båt";
+        protected static new string _type => "Motorbåt";
 
-        public Boat(string registration = "", string color = "", int numpassengers = 0) : base(registration, color, numpassengers)
+        [PropertyDescription("Lastutrymme (m³)")]
+        public int CargoSpace { get; set; }
+
+        public Motorboat() : base()
         {
         }
 
-        public static Boat CreateEmpty()
+        public static Motorboat Create()
         {
-            return new Boat();
+            return new Motorboat();
+        }
+    }
+
+    class Sailboat : Vehicle
+    {
+        protected static new string _type => "Segelbåt";
+
+        [PropertyDescription("Lastutrymme (m³)")]
+        public int CargoSpace { get; set; }
+
+        public Sailboat() : base()
+        {
+        }
+
+        public static Sailboat Create()
+        {
+            return new Sailboat();
         }
     }
 }
