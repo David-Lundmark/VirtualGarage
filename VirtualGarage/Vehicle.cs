@@ -14,7 +14,7 @@ namespace VirtualGarage
     {
         static List<string> _validtypes;
 
-        protected static string _type => "*FEL*";
+        protected static string _type { get { return "*FEL*"; } }
 
         protected Guid ID { get; private set; }
 
@@ -180,7 +180,7 @@ namespace VirtualGarage
 
     class Airplane : WheeledPoweredVehicle
     {
-        protected static new string _type => "Flygplan";
+        protected static new string _type { get { return "Flygplan"; } }
 
         [PropertyDescription("Lastutrymme (m³)")]
         public int CargoSpace { get; set; }
@@ -197,7 +197,7 @@ namespace VirtualGarage
 
     class Motorcycle : WheeledPoweredVehicle
     {
-        protected static new string _type => "Motorcykel";
+        protected static new string _type { get { return "Motorcykel"; } }
 
         public Motorcycle() : base()
         {
@@ -211,7 +211,7 @@ namespace VirtualGarage
 
     class Car : WheeledPoweredVehicle
     {
-        protected static new string _type => "Bil";
+        protected static new string _type { get { return "Bil"; } }
 
         [PropertyDescription("Lastutrymme (m³)")]
         public int CargoSpace { get; set; }
@@ -228,7 +228,7 @@ namespace VirtualGarage
 
     class Bus : WheeledPoweredVehicle
     {
-        protected static new string _type => "Buss";
+        protected static new string _type { get { return "Buss"; } }
 
         [PropertyDescription("Lastutrymme (m³)")]
         public int CargoSpace { get; set; }
@@ -243,37 +243,20 @@ namespace VirtualGarage
         }
     }
 
-    class Motorboat : PoweredVehicle
+    class Boat : PoweredVehicle
     {
-        protected static new string _type => "Motorbåt";
+        protected static new string _type { get { return "Båt"; } }
 
         [PropertyDescription("Lastutrymme (m³)")]
         public int CargoSpace { get; set; }
 
-        public Motorboat() : base()
+        public Boat() : base()
         {
         }
 
-        public static Motorboat Create()
+        public static Boat Create()
         {
-            return new Motorboat();
-        }
-    }
-
-    class Sailboat : Vehicle
-    {
-        protected static new string _type => "Segelbåt";
-
-        [PropertyDescription("Lastutrymme (m³)")]
-        public int CargoSpace { get; set; }
-
-        public Sailboat() : base()
-        {
-        }
-
-        public static Sailboat Create()
-        {
-            return new Sailboat();
+            return new Boat();
         }
     }
 }
